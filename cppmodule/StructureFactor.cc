@@ -87,14 +87,15 @@ void StructureFactor::analyze(unsigned int timestep)
     // Calculate value of collective variable (sum of real parts of fourier modes)
     for (unsigned k = 0; k < m_fourier_modes.getNumElements(); k++)
         {
-        Scalar2 fourier_mode = h_fourier_modes.data[k];
+        Scalar re = Scalar(0.0);
+        Scalar im = Scalar(0.0);
 
 #ifdef ENABLE_MPI
         // reduce value of fourier mode on root processor
         if (m_pdata->getDomainDecomposition())
             {
-            MPI_Reduce(MPI_IN_PLACE,&fourier_mode.x,1, MPI_HOOMD_SCALAR, MPI_SUM, 0, m_exec_conf->getMPICommunicator());
-            MPI_Reduce(MPI_IN_PLACE,&fourier_mode.y,1, MPI_HOOMD_SCALAR, MPI_SUM, 0, m_exec_conf->getMPICommunicator());
+            MPI_Reduce(&h_fourier_modes.data[k].x,&re,1, MPI_HOOMD_SCALAR, MPI_SUM, 0, m_exec_conf->getMPICommunicator());
+            MPI_Reduce(&h_fourier_modes.data[k].y,&im,1, MPI_HOOMD_SCALAR, MPI_SUM, 0, m_exec_conf->getMPICommunicator());
             }
 #endif
 
@@ -116,10 +117,10 @@ void StructureFactor::analyze(unsigned int timestep)
             m_file << setprecision(10) << norm << m_delimiter;
 
             // write fourier mode and structure factor
-            m_file << setprecision(10) << fourier_mode.x << m_delimiter;
-            m_file << setprecision(10) << fourier_mode.y << m_delimiter;
+            m_file << setprecision(10) << re << m_delimiter;
+            m_file << setprecision(10) << im << m_delimiter;
 
-            Scalar sq = Scalar(1.0)/V*(fourier_mode.x*fourier_mode.x+fourier_mode.y*fourier_mode.y);
+            Scalar sq = Scalar(1.0)/V*(re*re+im*im);
 
             m_file << setprecision(10) << sq;
             m_file << std::endl;
