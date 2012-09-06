@@ -97,7 +97,12 @@ void StructureFactor::analyze(unsigned int timestep)
             MPI_Reduce(&h_fourier_modes.data[k].x,&re,1, MPI_HOOMD_SCALAR, MPI_SUM, 0, m_exec_conf->getMPICommunicator());
             MPI_Reduce(&h_fourier_modes.data[k].y,&im,1, MPI_HOOMD_SCALAR, MPI_SUM, 0, m_exec_conf->getMPICommunicator());
             }
+        else
 #endif
+            {
+            re = h_fourier_modes.data[k].x;
+            im = h_fourier_modes.data[k].y;
+            }
 
         if (is_root)
             {

@@ -47,7 +47,7 @@ void StructureFactorGPU::computeFourierModes(unsigned int timestep)
 
         {
         ArrayHandle<Scalar3> d_wave_vectors(m_wave_vectors, access_location::device, access_mode::read);
-        ArrayHandle<Scalar> d_fourier_modes(m_fourier_modes, access_location::device, access_mode::overwrite);
+        ArrayHandle<Scalar2> d_fourier_modes(m_fourier_modes, access_location::device, access_mode::overwrite);
         ArrayHandle<Scalar> d_gpu_mode(m_gpu_mode, access_location::device, access_mode::read);
         ArrayHandle<Scalar2> d_fourier_mode_scratch(m_fourier_mode_scratch, access_location::device, access_mode::overwrite);
 

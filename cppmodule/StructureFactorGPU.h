@@ -16,7 +16,6 @@ class StructureFactorGPU : public StructureFactor
         StructureFactorGPU(boost::shared_ptr<SystemDefinition> sysdef,
                                const std::vector<Scalar>& mode,
                                const std::vector<int3>& lattice_vectors,
-                               const std::vector<Scalar>& phases,
                                const std::string& filename,
                                bool overwrite);
 

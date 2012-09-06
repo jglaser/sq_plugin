@@ -11,7 +11,7 @@ __global__ void kernel_calculate_sq_partial(
             Scalar4 *postype,
             int n_wave,
             Scalar3 *wave_vectors,
-            Scalar *d_modes);
+            Scalar *d_modes)
     {
     extern __shared__ Scalar2 sdata[];
 
@@ -22,7 +22,7 @@ __global__ void kernel_calculate_sq_partial(
     for (unsigned int i = 0; i < n_wave; i++) {
         Scalar3 q = wave_vectors[i];
 
-        Scalar mySum = make_scalar2(0.0,0.0);
+        Scalar2 mySum = make_scalar2(0.0,0.0);
 
         if (j < n_particles) {
 
@@ -30,8 +30,8 @@ __global__ void kernel_calculate_sq_partial(
             Scalar dotproduct = q.x * p.x + q.y * p.y + q.z * p.z;
             unsigned int type = __float_as_int(postype[j].w);
             Scalar mode = d_modes[type];
-            mySum += make_scalar2(mode*cosf(dotproduct),
-                                  mode*sinf(dotproduct));
+            mySum.x += mySum.x+mode*cosf(dotproduct);
+            mySum.y += mySum.y+mode*sinf(dotproduct);
         }
         sdata[tidx] = mySum;
 
@@ -42,7 +42,8 @@ __global__ void kernel_calculate_sq_partial(
             {
             if (tidx < offs)
                 {
-                mySum += sdata[tidx+offs];
+                mySum.x += sdata[tidx+offs].x;
+                mySum.y += sdata[tidx+offs].y;
                 sdata[tidx] = mySum;
                 }
             offs >>=1;
@@ -60,12 +61,12 @@ __global__ void kernel_final_reduce_fourier_modes(Scalar2* fourier_mode_partial,
                                        Scalar2 *fourier_modes,
                                        unsigned int n_wave)
     {
-    extern __shared__ volatile Scalar2 smem[];
+    extern __shared__ Scalar2 smem[];
 
     unsigned int j = blockIdx.x;
 
     if (threadIdx.x == 0)
-       fourier_modes[j] = Scalar(0.0);
+       fourier_modes[j] = make_scalar2(0.0,0.0);
 
     for (int start = 0; start< nblocks; start += blockDim.x)
         {
@@ -82,13 +83,19 @@ __global__ void kernel_final_reduce_fourier_modes(Scalar2* fourier_mode_partial,
         while (offs > 0)
             {
             if (threadIdx.x < offs)
-                smem[threadIdx.x] += smem[threadIdx.x + offs];
+                {
+                smem[threadIdx.x].x += smem[threadIdx.x + offs].x;
+                smem[threadIdx.x].y += smem[threadIdx.x + offs].y;
+                }
             offs >>= 1;
             __syncthreads();
             }
 
          if (threadIdx.x == 0)
-            fourier_modes[j] += smem[0];
+            {
+            fourier_modes[j].x += smem[0].x;
+            fourier_modes[j].y += smem[0].y;
+            }
         }
     }
 
